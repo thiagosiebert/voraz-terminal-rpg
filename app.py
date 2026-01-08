@@ -1,9 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import logging
-
-# Configuração de logs para você ver no 'Manage App' do Streamlit
-logging.basicConfig(level=logging.INFO)
 
 # Configuração da Página
 st.set_page_config(page_title="Voraz Terminal", page_icon="📡")
@@ -17,14 +14,15 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📡 CONEXÃO ESTABELECIDA: V-R-Z")
+st.title("📡 CONEXÃO ESTABELECIDA: V-0-R-A-Z")
 
-# --- CONFIGURAÇÃO DA API ---
+# --- CONFIGURAÇÃO DA API (NOVA SDK) ---
 if "GEMINI_API_KEY" not in st.secrets:
-    st.error("ERRO CRÍTICO: Chave API não encontrada nos Secrets.")
+    st.error("ERRO: Chave API ausente nos Secrets.")
     st.stop()
 
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+# Inicializa o cliente novo
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 def load_prompt(file_path="voraz_prompt.txt"):
     try:
@@ -35,53 +33,36 @@ def load_prompt(file_path="voraz_prompt.txt"):
 
 SYSTEM_PROMPT = load_prompt()
 
-# --- DIAGNÓSTICO DE MODELO ---
-@st.cache_resource
-def get_model():
-    # Testamos o nome mais limpo possível
-    model_name = "gemini-1.5-flash" 
-    try:
-        # Tenta instanciar o modelo
-        m = genai.GenerativeModel(
-            model_name=model_name,
-            system_instruction=SYSTEM_PROMPT
-        )
-        return m
-    except Exception as e:
-        logging.error(f"Erro ao carregar {model_name}: {e}")
-        # Fallback para o Pro caso o Flash dê erro de 404
-        return genai.GenerativeModel(model_name="gemini-1.5-pro", system_instruction=SYSTEM_PROMPT)
-
-model = get_model()
-
 # --- LÓGICA DO CHAT ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Exibe o histórico
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Dante, o que você descobriu?"):
+    # Adiciona mensagem do usuário
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        # Tradução de roles Streamlit -> Gemini
-        api_history = []
-        for m in st.session_state.messages[:-1]:
-            role = "model" if m["role"] == "assistant" else "user"
-            api_history.append({"role": role, "parts": [m["content"]]})
-        
         try:
-            # Inicia o chat com o histórico formatado
-            chat_session = model.start_chat(history=api_history)
-            response = chat_session.send_message(prompt)
+            # Na nova SDK, enviamos o sistema no 'config'
+            response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt,
+                config={
+                    "system_instruction": SYSTEM_PROMPT,
+                }
+            )
             
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            answer = response.text
+            st.markdown(answer)
+            st.session_state.messages.append({"role": "assistant", "content": answer})
             
         except Exception as e:
-            st.error(f"ERRO DE CONEXÃO TRANSDIMENSIONAL: {e}")
-            logging.error(f"Detalhes do erro: {e}")
+            st.error(f"FALHA NA SINTONIA: {e}")
+            logging.error(f"Erro detalhado: {e}")
