@@ -9,72 +9,83 @@ import random
 logging.basicConfig(level=logging.INFO)
 
 # Configuração da Página
-st.set_page_config(page_title="Terminal V-R-Z", page_icon="🔮")
+st.set_page_config(page_title="VRZ TERMINAL", page_icon="📟", layout="centered")
 
-# --- ESTILO CSS AVANÇADO (Glitch & Flicker) ---
+# --- ESTILO CSS: PROTOCOLO MU/TH/UR 6000 ---
 st.markdown("""
     <style>
-    /* Fundo e Fonte Geral */
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+    /* Fundo e Fonte Principal */
     .stApp { 
-        background-color: #050801; 
-        color: #00ff41; 
-        font-family: 'Courier New', monospace; 
+        background-color: #0d1107; 
+        color: #33ff33; 
+        font-family: 'VT323', monospace; 
+        font-size: 1.2rem;
     }
     
-    /* Efeito de Flicker (Tremido de luz) na tela toda */
-    @keyframes flicker {
-        0% { opacity: 0.98; }
-        5% { opacity: 0.95; }
-        10% { opacity: 0.9; }
-        15% { opacity: 0.95; }
-        20% { opacity: 0.98; }
-        25% { opacity: 0.95; }
-        80% { opacity: 0.98; }
-        100% { opacity: 1; }
-    }
-    .stApp {
-        animation: flicker 0.15s infinite;
-    }
-
-    /* Efeito Glitch no Título */
-    .glitch {
-        font-size: 2rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        position: relative;
-        text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff,
-                     0.025em 0.04em 0 #fffc00;
-        animation: glitch 725ms infinite;
+    /* Efeito de Curvatura CRT e Glow */
+    .stApp::after {
+        content: " ";
+        display: block;
+        position: fixed;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: radial-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 100%), 
+                    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                    linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+        z-index: 2;
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
     }
 
-    @keyframes glitch {
-        0% { text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
-        15% { text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
-        16% { text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00; }
-        49% { text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00; }
-        50% { text-shadow: 0.03em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0.05em -0.03em 0 #fffc00; }
-        99% { text-shadow: 0.03em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0.05em -0.03em 0 #fffc00; }
-        100% { text-shadow: -0.025em 0 0 #00fffc, -0.025em -0.025em 0 #fc00ff, -0.025em -0.05em 0 #fffc00; }
+    /* Scanlines */
+    .stApp::before {
+        content: " ";
+        display: block;
+        position: fixed;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
+        z-index: 2;
+        background-size: 100% 4px;
+        pointer-events: none;
+        animation: scanline 10s linear infinite;
     }
 
-    /* Estilização das Mensagens */
+    @keyframes scanline {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 100%; }
+    }
+
+    /* Brilho no Texto (Phosphor Glow) */
+    h1, h2, h3, p, span, .stMarkdown {
+        text-shadow: 0 0 5px rgba(51, 255, 51, 0.8);
+    }
+
+    /* Ajuste nas Caixas de Mensagem */
     .stChatMessage { 
-        background-color: rgba(26, 26, 26, 0.8); 
-        border: 1px solid #00ff41; 
+        background-color: rgba(0, 40, 0, 0.2); 
+        border: 1px solid #33ff33; 
         border-radius: 0px;
-        margin-bottom: 15px;
+        margin-bottom: 10px;
+        box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1);
+    }
+
+    /* Título Glitchado */
+    .vrz-header {
+        color: #33ff33;
+        font-size: 2.5rem;
+        text-align: center;
+        letter-spacing: 5px;
+        border-bottom: 2px solid #33ff33;
+        padding-bottom: 10px;
+        margin-bottom: 30px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="glitch">📡 CONEXÃO TRANSDIMENSIONAL: V-R-Z</div>', unsafe_allow_html=True)
-st.write("---")
+st.markdown('<div class="vrz-header">INTERFACE VRZ v4.1 - MU/TH/UR PROTOCOL</div>', unsafe_allow_html=True)
 
 # --- INICIALIZAÇÃO DO CLIENTE ---
-if "GEMINI_API_KEY" not in st.secrets:
-    st.error("Chave API ausente.")
-    st.stop()
-
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 def load_prompt():
@@ -82,7 +93,7 @@ def load_prompt():
         with open("voraz_prompt.txt", "r", encoding="utf-8") as f:
             return f.read()
     except:
-        return "Você é o Voraz, uma esfera de mercúrio senciente residente na Umbra."
+        return "Você é VRZ, uma inteligência senciente em formato de esfera metálica na Umbra."
 
 SYSTEM_PROMPT = load_prompt()
 
@@ -90,60 +101,57 @@ SYSTEM_PROMPT = load_prompt()
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Exibe histórico com os novos ícones
 for message in st.session_state.messages:
     avatar = "🐺" if message["role"] == "user" else "⚪"
     with st.chat_message(message["role"], avatar=avatar):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Dante, o que você descobriu?"):
-    # Dante (User)
+if prompt := st.chat_input("DANTE > "):
+    # Dante
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user", avatar="🐺"):
         st.markdown(prompt)
 
-    # Voraz (Assistant)
+    # VRZ
     with st.chat_message("assistant", avatar="⚪"):
         placeholder = st.empty()
-        placeholder.markdown("📡 *Sintonizando frequência na Umbra...*")
+        placeholder.markdown("`VRZ IS SEARCHING...`")
         
-        # Retry logic
-        max_retries = 3
-        retry_delay = 1
-        
-        for i in range(max_retries):
-            try:
-                history = []
-                for m in st.session_state.messages[:-1]:
-                    role = "model" if m["role"] == "assistant" else "user"
-                    history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
+        try:
+            history = []
+            for m in st.session_state.messages[:-1]:
+                role = "model" if m["role"] == "assistant" else "user"
+                history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
 
-                chat = client.chats.create(
-                    model="gemini-2.5-flash", 
-                    config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
-                    history=history
-                )
+            chat = client.chats.create(
+                model="gemini-2.5-flash", 
+                config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+                history=history
+            )
+            
+            response = chat.send_message(prompt)
+            full_response = response.text
+            
+            # --- EFEITO DE DIGITAÇÃO "ALIEN" ---
+            typed_text = ""
+            for char in full_response:
+                typed_text += char
+                placeholder.markdown(typed_text + "█") # Cursor em bloco estilo terminal
                 
-                response = chat.send_message(prompt)
-                full_response = response.text
+                # Velocidade de suspense: entre 0.05 e 0.1s
+                # Adicionamos um pequeno random para não parecer robótico demais
+                delay = random.uniform(0.04, 0.09)
                 
-                # --- EFEITO DE DIGITAÇÃO ---
-                typed_text = ""
-                for char in full_response:
-                    typed_text += char
-                    placeholder.markdown(typed_text + "▌")
-                    # Ajuste a velocidade aqui (0.01 a 0.05 é o ideal)
-                    time.sleep(0.02)
-                
-                placeholder.markdown(full_response)
-                st.session_state.messages.append({"role": "assistant", "content": full_response})
-                break
-                
-            except Exception as e:
-                if "503" in str(e) and i < max_retries - 1:
-                    placeholder.markdown(f"⚠️ *Interferência detectada... Tentando reconectar ({i+1})...*")
-                    time.sleep(retry_delay)
-                    retry_delay *= 2
-                else:
-                    placeholder.error(f"📡 SINAL PERDIDO: {e}")
-                    break
+                # Pausa maior em pontos e vírgulas para simular processamento
+                if char in [".", "!", "?", ":"]:
+                    delay += 0.4
+                elif char == ",":
+                    delay += 0.2
+                    
+                time.sleep(delay)
+            
+            placeholder.markdown(full_response)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            
+        except Exception as e:
+            st.error(f"SYSTEM FAILURE: {e}")
