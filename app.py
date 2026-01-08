@@ -9,7 +9,7 @@ import random
 logging.basicConfig(level=logging.INFO)
 
 # Configuração da Página
-st.set_page_config(page_title="Terminal V-O-R-A-Z", page_icon="🔮")
+st.set_page_config(page_title="Terminal V-R-Z", page_icon="🔮")
 
 # --- ESTILO CSS AVANÇADO (Glitch & Flicker) ---
 st.markdown("""
