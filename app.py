@@ -67,7 +67,7 @@ if prompt := st.chat_input("Dante, o que você descobriu?"):
 
             # Iniciamos o chat
             chat = client.chats.create(
-                model="gemini-1.5-flash", # Se der 404, olhe os logs para ver o nome correto
+                model="gemini-2.5-flash", # Se der 404, olhe os logs para ver o nome correto
                 config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
                 history=history
             )
