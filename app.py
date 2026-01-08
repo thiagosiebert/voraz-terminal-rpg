@@ -14,7 +14,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📡 CONEXÃO ESTABELECIDA: V-0-R-A-Z")
+st.title("📡 CONEXÃO ESTABELECIDA: V-R-Z")
 
 # --- CONFIGURAÇÃO DA API (NOVA SDK) ---
 if "GEMINI_API_KEY" not in st.secrets:
