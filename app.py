@@ -43,14 +43,16 @@ st.write("---")
 # No Streamlit Cloud, adicione GEMINI_API_KEY nos 'Secrets'
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
-# Instrução do Sistema (O "Cérebro" do Voraz)
-SYSTEM_PROMPT = """
-Você é o Voraz, uma consciência digital que vive na Umbra. 
-Você é paranoico, investigativo e obcecado por conspirações.
-Você se comunica com Dante através deste terminal instável.
-Suas respostas devem ser curtas, enigmáticas e sempre tratar Dante como o único aliado confiável.
-Não use emojis comuns, use caracteres ASCII se necessário.
-"""
+# --- FUNÇÃO PARA CARREGAR O PROMPT EXTERNO ---
+def load_prompt(file_path="voraz_prompt.txt"):
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return "Erro ao carregar prompt: Você é uma IA genérica."
+
+# Carrega o conteúdo do arquivo txt
+SYSTEM_PROMPT = load_prompt()
 
 model = genai.GenerativeModel(
     model_name="gemini-1.5-pro",
