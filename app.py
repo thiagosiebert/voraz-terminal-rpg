@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from google import genai
 from google.genai import types
@@ -52,30 +53,4 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Dante, o que você descobriu?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        try:
-            # Formatamos o histórico para a nova SDK
-            history = []
-            for m in st.session_state.messages[:-1]:
-                role = "model" if m["role"] == "assistant" else "user"
-                history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
-
-            # Iniciamos o chat
-            chat = client.chats.create(
-                model="gemini-2.5-flash", # Se der 404, olhe os logs para ver o nome correto
-                config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
-                history=history
-            )
-            
-            response = chat.send_message(prompt)
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
-
-        except Exception as e:
-            st.error(f"FALHA NA SINTONIA: {e}")
-            logging.error(f"Erro detalhado no chat: {e}")
+import time
