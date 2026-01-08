@@ -55,7 +55,7 @@ def load_prompt(file_path="voraz_prompt.txt"):
 SYSTEM_PROMPT = load_prompt()
 
 model = genai.GenerativeModel(
-    model_name="models/gemini-1.5-pro-latest",
+    model_name="models/gemini-1.5-flash",
     system_instruction=SYSTEM_PROMPT
 )
 
