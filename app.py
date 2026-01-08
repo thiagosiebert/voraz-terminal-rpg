@@ -67,7 +67,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="glitch">📡 CONEXÃO TRANSDIMENSIONAL: V-O-R-A-Z</div>', unsafe_allow_html=True)
+st.markdown('<div class="glitch">📡 CONEXÃO TRANSDIMENSIONAL: V-R-Z</div>', unsafe_allow_html=True)
 st.write("---")
 
 # --- INICIALIZAÇÃO DO CLIENTE ---
