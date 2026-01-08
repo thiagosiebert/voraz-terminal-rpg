@@ -53,4 +53,47 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-import time
+if prompt := st.chat_input("Dante, o que você descobriu?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        placeholder = st.empty()
+        placeholder.markdown("📡 *Sintonizando frequência...*")
+        
+        # --- LÓGICA DE RETENTATIVA (RETRY) ---
+        max_retries = 3
+        retry_delay = 1  # segundos
+        success = False
+
+        for i in range(max_retries):
+            try:
+                # Formatamos o histórico
+                history = []
+                for m in st.session_state.messages[:-1]:
+                    role = "model" if m["role"] == "assistant" else "user"
+                    history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
+
+                chat = client.chats.create(
+                    model="gemini-2.5-flash", 
+                    config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+                    history=history
+                )
+                
+                response = chat.send_message(prompt)
+                answer = response.text
+                placeholder.markdown(answer)
+                st.session_state.messages.append({"role": "assistant", "content": answer})
+                success = True
+                break # Sai do loop se der certo
+                
+            except Exception as e:
+                if "503" in str(e) and i < max_retries - 1:
+                    placeholder.markdown(f"⚠️ *Instabilidade detectada. Tentativa de reconexão {i+1}/{max_retries}...*")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2 # Espera um pouco mais na próxima
+                else:
+                    placeholder.error(f"📡 CONEXÃO PERDIDA: A Umbra está muito instável no momento. Tente novamente em alguns segundos. (Erro: {e})")
+                    logging.error(f"Erro no chat: {e}")
+                    break
