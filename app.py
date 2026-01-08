@@ -36,7 +36,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("📡 CONEXÃO ESTABELECIDA: V-0-R-A-Z")
+st.title("📡 CONEXÃO ESTABELECIDA: V-R-Z")
 st.write("---")
 
 # --- CONFIGURAÇÃO DA API ---
@@ -55,7 +55,7 @@ def load_prompt(file_path="voraz_prompt.txt"):
 SYSTEM_PROMPT = load_prompt()
 
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-pro",
+    model_name="models/gemini-1.5-pro-latest",
     system_instruction=SYSTEM_PROMPT
 )
 
