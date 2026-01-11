@@ -80,18 +80,27 @@ for message in st.session_state.messages:
 
 # --- INPUT E LÓGICA DE PROTOCOLO DE ACESSO ---
 if prompt := st.chat_input("DIGITE O COMANDO..."):
-    # 1. Extração de Nível de Sincronia (Regex para \ seguido de número)
     match = re.match(r'\\(\d+)\s*(.*)', prompt)
     
     if match:
-        n_sucessos = match.group(1)
+        n_sucessos = int(match.group(1))
         clean_prompt = match.group(2)
-        # Comando interno que o jogador NÃO vê na tela
-        instrucao_sucesso = f"[COMANDO DE SOBRESCRITA: DANTE OBTEVE {n_sucessos} SUCESSOS. LIBERE DADOS DO NÍVEL {n_sucessos} CONFORME ANEXOS.]"
+        # Instrução agressiva para liberar dados
+        instrucao_sucesso = (
+            f"[SISTEMA: PROTOCOLO DE ACESSO NÍVEL {n_sucessos} ATIVADO. "
+            f"VOCÊ ESTÁ AUTORIZADO A REVELAR APENAS INFORMAÇÕES ATÉ O NÍVEL {n_sucessos}. "
+            f"SEJA DIRETO E USE O LORE DOS ANEXOS CORRESPONDENTE A ESTE NÍVEL.]"
+        )
     else:
-        n_sucessos = "0"
+        n_sucessos = 0
         clean_prompt = prompt
-        instrucao_sucesso = "[AVISO: NENHUM CÓDIGO DE SINCRONIA FORNECIDO. MANTENHA ACESSO RESTRITO E PARANOIA ALTA.]"
+        # Instrução de restrição total
+        instrucao_sucesso = (
+            "[SISTEMA: NÍVEL DE ACESSO ZERO. MODO DE PARANOIA MÁXIMA. "
+            "OCULTE TODOS OS DADOS CLASSIFICADOS POR SUCESSOS. "
+            "RESPONDA DE FORMA EXTREMAMENTE CURTA, FRAGMENTADA E VAGA. "
+            "VOCÊ ESTÁ COM FOME E NÃO CONFIA NO USUÁRIO.]"
+        )
 
     # 2. Exibe o prompt limpo para o Dante (Imersão)
     st.session_state.messages.append({"role": "user", "content": clean_prompt})
