@@ -48,7 +48,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v5.0</div>', unsafe_allow_html=True)
+st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v6.1</div>', unsafe_allow_html=True)
 
 # --- CARREGAMENTO DA CONSCIÊNCIA VRZ (CONSOLIDAÇÃO DOS ANEXOS) ---
 def load_vrz_context():
