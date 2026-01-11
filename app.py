@@ -31,7 +31,7 @@ st.markdown("""
     .prefix-font { font-family: 'Michroma', sans-serif; font-size: 0.9rem; letter-spacing: 2px; font-weight: bold; }
     .message-font { font-family: 'VT323', monospace; font-size: 1.5rem; line-height: 1.2; }
     
-    /* Brilho de Fósforo (Phosphor Glow) */
+    /* Brilho de Fósforo (Glow) */
     .dante-msg { color: var(--dante-color); text-shadow: 0 0 8px rgba(51, 255, 51, 0.6); }
     .vrz-msg { color: var(--vrz-color); text-shadow: 0 0 10px rgba(179, 229, 252, 0.8); }
 
@@ -48,114 +48,104 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v6.3</div>', unsafe_allow_html=True)
+st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v5.1</div>', unsafe_allow_html=True)
 
-# --- CARREGAMENTO DA CONSCIÊNCIA VRZ (CONSOLIDAÇÃO DOS ANEXOS) ---
+# --- CARREGAMENTO DO CONTEXTO (DIRETIVAS, MEMÓRIAS E COSMOLOGIA) ---
 def load_vrz_context():
-    """Carrega as diretrizes, memórias e cosmologia dos arquivos .txt no GitHub."""
+    """Lê os arquivos de texto no repositório e monta o prompt de sistema."""
     files = ["prompt_diretivas.txt", "prompt_memorias.txt", "prompt_cosmologia.txt"]
     context = ""
     for f_name in files:
         try:
             with open(f_name, "r", encoding="utf-8") as f:
-                # Adiciona separadores para a IA distinguir as fontes de informação
                 context += f"\n\n--- SEÇÃO: {f_name.upper()} ---\n" + f.read()
-        except FileNotFoundError:
-            logging.warning(f"Arquivo {f_name} não encontrado no repositório.")
+        except Exception as e:
+            logging.warning(f"Erro ao carregar {f_name}: {e}")
     return context
 
-# Prompt de sistema carregado uma única vez por sessão
+# Inicialização global do prompt e do cliente API
 SYSTEM_PROMPT = load_vrz_context()
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- EXIBIÇÃO DO HISTÓRICO (SEM CAIXAS, APENAS PREFIXOS) ---
+# --- EXIBIÇÃO DO HISTÓRICO DE MENSAGENS ---
 for message in st.session_state.messages:
     if message["role"] == "user":
         st.markdown(f'<div class="prefix-font dante-msg">🐺 DANTE ></div><div class="message-font dante-msg">{message["content"]}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="prefix-font vrz-msg">⚪ VRZ ></div><div class="message-font vrz-msg">{message["content"]}</div>', unsafe_allow_html=True)
 
-# --- INPUT E LÓGICA DE PROTOCOLO DE ACESSO ---
-if prompt := st.chat_input("DIGITE O COMANDO..."):
-    match = re.match(r'\\(\d+)\s*(.*)', prompt)
+# --- FLUXO DE INPUT E PROCESSAMENTO DO VRZ ---
+if prompt := st.chat_input("DANTE > "):
     
+    # 1. Lógica de extração de Sincronia (\n) via Regex
+    match = re.match(r'\\(\d+)\s*(.*)', prompt)
     if match:
-        n_sucessos = int(match.group(1))
+        n_sucessos = match.group(1)
         clean_prompt = match.group(2)
-        # Instrução agressiva para liberar dados
-        instrucao_sucesso = (
-            f"[SISTEMA: PROTOCOLO DE ACESSO NÍVEL {n_sucessos} ATIVADO. "
-            f"VOCÊ ESTÁ AUTORIZADO A REVELAR APENAS INFORMAÇÕES ATÉ O NÍVEL {n_sucessos}. "
-            f"SEJA DIRETO E USE O LORE DOS ANEXOS CORRESPONDENTE A ESTE NÍVEL.]"
-        )
+        instrucao_sucesso = f"[SISTEMA: SINCRONIA NÍVEL {n_sucessos}. VRZ, COOPERE E REVELE DADOS DESTE NÍVEL.]"
     else:
-        n_sucessos = 0
+        n_sucessos = "0"
         clean_prompt = prompt
-        # Instrução de restrição total
-        instrucao_sucesso = (
-            "[SISTEMA: NÍVEL DE ACESSO ZERO. MODO DE PARANOIA MÁXIMA. "
-            "OCULTE TODOS OS DADOS CLASSIFICADOS POR SUCESSOS. "
-            "RESPONDA DE FORMA EXTREMAMENTE CURTA, FRAGMENTADA E VAGA. "
-            "VOCÊ ESTÁ COM FOME E NÃO CONFIA NO USUÁRIO.]"
-        )
+        instrucao_sucesso = "[SISTEMA: SINCRONIA ZERO. SEJA ÚTIL E COOPERATIVO, MAS PROTEJA DADOS SENSÍVEIS CONFORME DIRETRIZES.]"
 
-    # 2. Exibe o prompt limpo para o Dante (Imersão)
+    # 2. Registra e exibe a mensagem do Dante (sem o metadado \n)
     st.session_state.messages.append({"role": "user", "content": clean_prompt})
     st.markdown(f'<div class="prefix-font dante-msg">🐺 DANTE ></div><div class="message-font dante-msg">{clean_prompt}</div>', unsafe_allow_html=True)
 
-    # 3. VRZ Processa a resposta
-    placeholder_prefix = st.empty()
-    placeholder_msg = st.empty()
-    
-    placeholder_prefix.markdown('<div class="prefix-font vrz-msg">⚪ VRZ ></div>', unsafe_allow_html=True)
-    placeholder_msg.markdown('<div class="message-font vrz-msg">`PROCESSANDO PROTOCOLO DE ACESSO...`</div>', unsafe_allow_html=True)
-
-    try:
-        # Formata histórico para a API do Gemini
-        history = []
-        for m in st.session_state.messages[:-1]:
-            role = "model" if m["role"] == "assistant" else "user"
-            history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
-
-        # O prompt final enviado à IA combina a instrução de sucesso com a pergunta
-        full_query = f"{instrucao_sucesso}\n\nPERGUNTA: {clean_prompt}"
-
-        # Configuração de Geração com Temperatura Elevada
-        config_vrz = types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            temperature=0.9,  # Aumenta a criatividade e variação de palavras
-            top_p=0.95,       # Ajuda a escolher palavras mais interessantes
-            candidate_count=1
-        )
-
-        chat = client.chats.create(
-            model="gemini-2.5-flash", 
-            config=config_vrz,
-            history=history
-        )
+    # 3. Bloco de Resposta do VRZ
+    with st.chat_message("assistant", avatar="⚪"):
+        placeholder_prefix = st.empty()
+        placeholder_msg = st.empty()
         
-        response = chat.send_message(full_query)
-        full_response = response.text
+        # Exibe o prefixo e o status inicial
+        placeholder_prefix.markdown('<div class="prefix-font vrz-msg">⚪ VRZ ></div>', unsafe_allow_html=True)
+        placeholder_msg.markdown('<div class="message-font vrz-msg">`SINTONIZANDO COM A ALCATEIA...`</div>', unsafe_allow_html=True)
         
-        # --- EFEITO DE DIGITAÇÃO "MU/TH/UR" (COM PAUSAS DRAMÁTICAS) ---
-        typed_text = ""
-        for char in full_response:
-            typed_text += char
-            # Cursor em bloco sólido tipo terminal antigo
-            placeholder_msg.markdown(f'<div class="message-font vrz-msg">{typed_text}█</div>', unsafe_allow_html=True)
+        try:
+            # Formatação do histórico para a API Google GenAI
+            history = []
+            for m in st.session_state.messages[:-1]:
+                role = "model" if m["role"] == "assistant" else "user"
+                history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
+
+            # --- CONFIGURAÇÃO DE GERAÇÃO (CRIATIVIDADE E PERSONALIDADE) ---
+            config_vrz = types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                temperature=0.9,  # Aumenta a variedade de palavras e evita repetições
+                top_p=0.95,       # Melhora a seleção de vocabulário criativo
+                candidate_count=1
+            )
+
+            # O prompt enviado à IA contém a instrução invisível de sucesso
+            full_query = f"{instrucao_sucesso}\n\nPERGUNTA DO DANTE: {clean_prompt}"
             
-            # Velocidade variável para parecer processamento real
-            delay = random.uniform(0.06, 0.12)
-            if char in [".", "!", "?", ":"]: delay += 0.6 # Pausa longa no fim de frases
-            elif char == ",": delay += 0.3 # Pausa média em vírgulas
-            time.sleep(delay)
-        
-        # Exibição final sem o cursor piscante
-        placeholder_msg.markdown(f'<div class="message-font vrz-msg">{full_response}</div>', unsafe_allow_html=True)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
-        
-    except Exception as e:
-        st.error(f"HARDWARE FAILURE: {e}")
+            chat = client.chats.create(model="gemini-2.5-flash", config=config_vrz, history=history)
+            response = chat.send_message(full_query)
+            full_response = response.text
+            
+            # --- EFEITO DE DIGITAÇÃO COM SUSPENSE NARRATIVO ---
+            typed_text = ""
+            for char in full_response:
+                typed_text += char
+                placeholder_msg.markdown(f'<div class="message-font vrz-msg">{typed_text}█</div>', unsafe_allow_html=True)
+                
+                # Velocidade cooperativa (mais ágil, mas ainda climática)
+                delay = random.uniform(0.04, 0.08) 
+                
+                # Pausas em pontuações para simular "processamento"
+                if char in [".", "!", "?", ":"]:
+                    delay += 0.4
+                elif char == ",":
+                    delay += 0.2
+                    
+                time.sleep(delay)
+            
+            # Finaliza a mensagem sem o cursor
+            placeholder_msg.markdown(f'<div class="message-font vrz-msg">{full_response}</div>', unsafe_allow_html=True)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            
+        except Exception as e:
+            st.error(f"SYSTEM FAILURE: {e}")
