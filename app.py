@@ -48,7 +48,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v6.1</div>', unsafe_allow_html=True)
+st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v6.3</div>', unsafe_allow_html=True)
 
 # --- CARREGAMENTO DA CONSCIÊNCIA VRZ (CONSOLIDAÇÃO DOS ANEXOS) ---
 def load_vrz_context():
@@ -123,9 +123,17 @@ if prompt := st.chat_input("DIGITE O COMANDO..."):
         # O prompt final enviado à IA combina a instrução de sucesso com a pergunta
         full_query = f"{instrucao_sucesso}\n\nPERGUNTA: {clean_prompt}"
 
+        # Configuração de Geração com Temperatura Elevada
+        config_vrz = types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            temperature=0.9,  # Aumenta a criatividade e variação de palavras
+            top_p=0.95,       # Ajuda a escolher palavras mais interessantes
+            candidate_count=1
+        )
+
         chat = client.chats.create(
             model="gemini-2.5-flash", 
-            config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+            config=config_vrz,
             history=history
         )
         
