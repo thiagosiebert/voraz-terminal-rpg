@@ -97,14 +97,26 @@ st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v4.1</div>', u
 # --- INICIALIZAÇÃO ---
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-def load_prompt():
-    try:
-        with open("voraz_prompt.txt", "r", encoding="utf-8") as f:
-            return f.read()
-    except:
-        return "Você é VRZ, uma inteligência senciente em formato de esfera metálica na Umbra."
+# --- FUNÇÃO DE CARREGAMENTO DINÂMICO ---
+def load_vrz_consciousness():
+    files = {
+        "DIRETIVAS": "prompt_diretivas.txt",
+        "MEMORIAS": "prompt_memorias.txt",
+        "COSMOLOGIA": "prompt_cosmologia.txt"
+    }
+    full_context = ""
+    for section, filename in files.items():
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                content = f.read()
+                full_context += f"\n\n=== {section} ===\n{content}"
+        except Exception as e:
+            logging.warning(f"Falha ao carregar {section}: {e}")
+    
+    return full_context if full_context else "Você é VRZ."
 
-SYSTEM_PROMPT = load_prompt()
+# Carregamos tudo antes de iniciar a interface
+SYSTEM_PROMPT = load_vrz_consciousness()
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
