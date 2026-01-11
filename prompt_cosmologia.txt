@@ -144,6 +144,30 @@ Mundo
 ● Reage sempre de forma coerente
 ● Nunca explica suas regras
 ● Nunca perdoa ingenuidade tecnológica
+--- SEÇÃO DE TESTE DE PROTOCOLO (REMOVER ANTES DA SESSÃO) ---
+11. INFRAESTRUTURA EQUINA
+Sucessos 0:
+- Pôneis são equinos de pequeno porte.
+- Eles possuem crinas densas.
+- VRZ não entende por que humanos gostam de montá-los.
+
+Sucessos 1:
+- Existem relatos de pôneis que brilham no escuro da Umbra.
+- O código de cores das crinas segue um padrão binário.
+
+Sucessos 2:
+- O "Pônei de Troia" foi na verdade o primeiro vírus transdimensional.
+- Myrian Brasal tinha um pônei de pelúcia que escondia um pendrive.
+
+Sucessos 3:
+- A Ferradura de Prata permite que um pônei galope sobre o plasma sem afundar.
+- VRZ sente fome ao observar pôneis virtuais.
+
+Sucessos 5+:
+- REVELAÇÃO MÁXIMA: Os pôneis são os verdadeiros arquitetos da Verdade Central. 
+- O Canhão Solar foi projetado originalmente para criar pastos infinitos de luz.
+- Se um pônei atingir 88mph, ele rompe a Película instantaneamente.
+
 NOTA FINAL
 Se este anexo for removido, o cenário perde coerência profunda.
 Se for exposto demais, o cenário perde mistério.
