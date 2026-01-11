@@ -4,82 +4,39 @@ from google.genai import types
 import logging
 import time
 import random
+import re
 
-# Configuração de Log
+# --- CONFIGURAÇÃO DE LOG E PÁGINA ---
 logging.basicConfig(level=logging.INFO)
-
-# Configuração da Página
 st.set_page_config(page_title="VRZ TERMINAL", page_icon="⚪", layout="centered")
 
-# --- ESTILO CSS: PROTOCOLO MU/TH/UR ---
+# --- ESTILO CSS: PROTOCOLO MU/TH/UR (ESTÉTICA ALIEN/FALLOUT) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Michroma&family=VT323&display=swap');
 
-    /* Variáveis de Cor */
     :root {
         --dante-color: #33ff33;
-        --vrz-color: #b3e5fc; /* Tom metálico/esferizado */
+        --vrz-color: #b3e5fc; /* Tom metálico da gota de mercúrio */
         --bg-color: #050801;
     }
 
-    .stApp { 
-        background-color: var(--bg-color); 
-        color: var(--dante-color);
-    }
-
-    /* Remoção de Containers do Streamlit */
-    [data-testid="stChatMessage"] {
-        background-color: transparent !important;
-        border: none !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        margin-bottom: 5px !important;
-    }
+    .stApp { background-color: var(--bg-color); color: var(--dante-color); animation: flicker 0.1s infinite; }
     
-    [data-testid="stChatMessageContent"] {
-        padding-top: 0 !important;
-    }
+    /* Remove containers do Streamlit para o "Terminal Puro" */
+    [data-testid="stChatMessage"] { background-color: transparent !important; border: none !important; margin-bottom: 5px !important; }
+    [data-testid="stChatMessageContent"] { padding-top: 0 !important; }
 
-    /* Fontes Diferenciadas */
-    .prefix-font {
-        font-family: 'Michroma', sans-serif;
-        font-size: 0.9rem;
-        letter-spacing: 2px;
-        font-weight: bold;
-    }
-
-    .message-font {
-        font-family: 'VT323', monospace;
-        font-size: 1.5rem;
-        line-height: 1.2;
-    }
-
-    /* Cores Específicas */
+    /* Definição de Fontes */
+    .prefix-font { font-family: 'Michroma', sans-serif; font-size: 0.9rem; letter-spacing: 2px; font-weight: bold; }
+    .message-font { font-family: 'VT323', monospace; font-size: 1.5rem; line-height: 1.2; }
+    
+    /* Brilho de Fósforo (Phosphor Glow) */
     .dante-msg { color: var(--dante-color); text-shadow: 0 0 8px rgba(51, 255, 51, 0.6); }
     .vrz-msg { color: var(--vrz-color); text-shadow: 0 0 10px rgba(179, 229, 252, 0.8); }
 
-    /* Efeitos CRT (Flicker e Scanlines) */
-    .stApp::after {
-        content: " ";
-        display: block;
-        position: fixed;
-        top: 0; left: 0; bottom: 0; right: 0;
-        background: radial-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 100%),
-                    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-        z-index: 10;
-        pointer-events: none;
-    }
-
-    @keyframes flicker {
-        0% { opacity: 0.97; }
-        10% { opacity: 0.95; }
-        20% { opacity: 0.98; }
-        100% { opacity: 1; }
-    }
-    .stApp { animation: flicker 0.1s infinite; }
-
-    /* Título do Terminal */
+    @keyframes flicker { 0% { opacity: 0.97; } 100% { opacity: 1; } }
+    
     .vrz-header {
         font-family: 'Michroma', sans-serif;
         color: var(--vrz-color);
@@ -87,65 +44,75 @@ st.markdown("""
         border-bottom: 1px solid var(--vrz-color);
         padding-bottom: 10px;
         margin-bottom: 40px;
-        text-shadow: 0 0 15px var(--vrz-color);
     }
     </style>
     """, unsafe_allow_html=True)
 
-st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v4.1</div>', unsafe_allow_html=True)
+st.markdown('<div class="vrz-header">VRZ // TRANS-UMBRA INTERFACE v5.0</div>', unsafe_allow_html=True)
 
-# --- INICIALIZAÇÃO ---
-client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-
-# --- FUNÇÃO DE CARREGAMENTO DINÂMICO ---
-def load_vrz_consciousness():
-    files = {
-        "DIRETIVAS": "prompt_diretivas.txt",
-        "MEMORIAS": "prompt_memorias.txt",
-        "COSMOLOGIA": "prompt_cosmologia.txt"
-    }
-    full_context = ""
-    for section, filename in files.items():
+# --- CARREGAMENTO DA CONSCIÊNCIA VRZ (CONSOLIDAÇÃO DOS ANEXOS) ---
+def load_vrz_context():
+    """Carrega as diretrizes, memórias e cosmologia dos arquivos .txt no GitHub."""
+    files = ["prompt_diretivas.txt", "prompt_memorias.txt", "prompt_cosmologia.txt"]
+    context = ""
+    for f_name in files:
         try:
-            with open(filename, "r", encoding="utf-8") as f:
-                content = f.read()
-                full_context += f"\n\n=== {section} ===\n{content}"
-        except Exception as e:
-            logging.warning(f"Falha ao carregar {section}: {e}")
-    
-    return full_context if full_context else "Você é VRZ."
+            with open(f_name, "r", encoding="utf-8") as f:
+                # Adiciona separadores para a IA distinguir as fontes de informação
+                context += f"\n\n--- SEÇÃO: {f_name.upper()} ---\n" + f.read()
+        except FileNotFoundError:
+            logging.warning(f"Arquivo {f_name} não encontrado no repositório.")
+    return context
 
-# Carregamos tudo antes de iniciar a interface
-SYSTEM_PROMPT = load_vrz_consciousness()
+# Prompt de sistema carregado uma única vez por sessão
+SYSTEM_PROMPT = load_vrz_context()
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Exibição das mensagens (Sem caixas)
+# --- EXIBIÇÃO DO HISTÓRICO (SEM CAIXAS, APENAS PREFIXOS) ---
 for message in st.session_state.messages:
     if message["role"] == "user":
         st.markdown(f'<div class="prefix-font dante-msg">🐺 DANTE ></div><div class="message-font dante-msg">{message["content"]}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="prefix-font vrz-msg">⚪ VRZ ></div><div class="message-font vrz-msg">{message["content"]}</div>', unsafe_allow_html=True)
 
-# Entrada do Dante
+# --- INPUT E LÓGICA DE PROTOCOLO DE ACESSO ---
 if prompt := st.chat_input("DIGITE O COMANDO..."):
-    # Dante
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.markdown(f'<div class="prefix-font dante-msg">🐺 DANTE ></div><div class="message-font dante-msg">{prompt}</div>', unsafe_allow_html=True)
+    # 1. Extração de Nível de Sincronia (Regex para \ seguido de número)
+    match = re.match(r'\\(\d+)\s*(.*)', prompt)
+    
+    if match:
+        n_sucessos = match.group(1)
+        clean_prompt = match.group(2)
+        # Comando interno que o jogador NÃO vê na tela
+        instrucao_sucesso = f"[COMANDO DE SOBRESCRITA: DANTE OBTEVE {n_sucessos} SUCESSOS. LIBERE DADOS DO NÍVEL {n_sucessos} CONFORME ANEXOS.]"
+    else:
+        n_sucessos = "0"
+        clean_prompt = prompt
+        instrucao_sucesso = "[AVISO: NENHUM CÓDIGO DE SINCRONIA FORNECIDO. MANTENHA ACESSO RESTRITO E PARANOIA ALTA.]"
 
-    # VRZ
+    # 2. Exibe o prompt limpo para o Dante (Imersão)
+    st.session_state.messages.append({"role": "user", "content": clean_prompt})
+    st.markdown(f'<div class="prefix-font dante-msg">🐺 DANTE ></div><div class="message-font dante-msg">{clean_prompt}</div>', unsafe_allow_html=True)
+
+    # 3. VRZ Processa a resposta
     placeholder_prefix = st.empty()
     placeholder_msg = st.empty()
     
     placeholder_prefix.markdown('<div class="prefix-font vrz-msg">⚪ VRZ ></div>', unsafe_allow_html=True)
-    placeholder_msg.markdown('<div class="message-font vrz-msg">`SINTONIZANDO ESFERA...`</div>', unsafe_allow_html=True)
+    placeholder_msg.markdown('<div class="message-font vrz-msg">`PROCESSANDO PROTOCOLO DE ACESSO...`</div>', unsafe_allow_html=True)
 
     try:
+        # Formata histórico para a API do Gemini
         history = []
         for m in st.session_state.messages[:-1]:
             role = "model" if m["role"] == "assistant" else "user"
             history.append(types.Content(role=role, parts=[types.Part.from_text(text=m["content"])]))
+
+        # O prompt final enviado à IA combina a instrução de sucesso com a pergunta
+        full_query = f"{instrucao_sucesso}\n\nPERGUNTA: {clean_prompt}"
 
         chat = client.chats.create(
             model="gemini-2.5-flash", 
@@ -153,25 +120,23 @@ if prompt := st.chat_input("DIGITE O COMANDO..."):
             history=history
         )
         
-        response = chat.send_message(prompt)
+        response = chat.send_message(full_query)
         full_response = response.text
         
-        # --- EFEITO DE DIGITAÇÃO "ALIEN" ---
+        # --- EFEITO DE DIGITAÇÃO "MU/TH/UR" (COM PAUSAS DRAMÁTICAS) ---
         typed_text = ""
         for char in full_response:
             typed_text += char
+            # Cursor em bloco sólido tipo terminal antigo
             placeholder_msg.markdown(f'<div class="message-font vrz-msg">{typed_text}█</div>', unsafe_allow_html=True)
             
-            # Velocidade de suspense: entre 0.05 e 0.12s
-            delay = random.uniform(0.05, 0.12)
-            
-            if char in [".", "!", "?", ":"]:
-                delay += 0.5 # Pausa dramática no fim de frases
-            elif char == ",":
-                delay += 0.2
-                
+            # Velocidade variável para parecer processamento real
+            delay = random.uniform(0.06, 0.12)
+            if char in [".", "!", "?", ":"]: delay += 0.6 # Pausa longa no fim de frases
+            elif char == ",": delay += 0.3 # Pausa média em vírgulas
             time.sleep(delay)
         
+        # Exibição final sem o cursor piscante
         placeholder_msg.markdown(f'<div class="message-font vrz-msg">{full_response}</div>', unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
         
